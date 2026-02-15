@@ -1,0 +1,116 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Replace Stream URL/HLS playback with ZEGO real-time camera live streaming (host/audience)",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Remove Stream URL inputs/validation from room creation and eliminate all Stream URL/HLS/MP4 video rendering from room viewing.",
+      "acceptanceCriteria": [
+        "CreateRoomPage no longer displays or requires a Stream URL input.",
+        "RoomPage no longer renders a <video> element fed by a stored stream URL.",
+        "All user-facing validation/toast text related to Stream URL is removed or replaced with relevant messaging."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/CreateRoomPage.tsx",
+          "operation": "modify",
+          "description": "Remove streamUrl state, form field, helper text, and related validation/toasts; update the submit handler to create rooms using only title and description."
+        },
+        {
+          "path": "frontend/src/hooks/useRooms.ts",
+          "operation": "modify",
+          "description": "Update the create-room mutation to stop accepting streamUrl and call the backend createRoom with only title and description (aligning with the updated backend types)."
+        },
+        {
+          "path": "frontend/src/pages/RoomPage.tsx",
+          "operation": "modify",
+          "description": "Remove any references to room.streamUrl and delete the HLS/MP4 <video> rendering branch entirely so media is no longer URL-based."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Implement ZEGO UIKit Prebuilt real-time live streaming per room with owner as Host and others as Audience.",
+      "acceptanceCriteria": [
+        "When the room owner opens the room, the ZEGO UI joins the room in a host/live-streaming mode with camera available (subject to browser permissions).",
+        "When a non-owner opens the room, the ZEGO UI joins the room in an audience mode and can watch the host stream in real time.",
+        "No part of the live viewing experience depends on a stored URL."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/room/ZegoGroupCall.tsx",
+          "operation": "rename",
+          "description": "Rename this component to a dedicated live-stream view component (e.g., ZegoLiveStream) to reflect the new real-time host/audience streaming experience."
+        },
+        {
+          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
+          "operation": "modify",
+          "description": "Refactor the renamed component to use ZEGOCLOUD UIKit Prebuilt Live Streaming scenario with role selection (Host for room owner; Audience otherwise), using useZegoKitToken for token loading and ensuring instance cleanup on unmount. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/RoomPage.tsx",
+          "operation": "modify",
+          "description": "Replace the prior media UI with a single ZEGO real-time live streaming view by rendering the new ZegoLiveStream component and passing the role derived from room.owner vs current authenticated principal; do not render any tabbed media UI or URL-based player. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Provide in-stream mic and camera controls for the host (and other applicable roles) during live sessions.",
+      "acceptanceCriteria": [
+        "The live streaming UI provides clear mic on/off and camera on/off controls (either via ZEGO built-in UI controls or explicit controls wired to the ZEGO instance).",
+        "Toggling mic/camera updates the local device capture state during an ongoing live session without requiring a page refresh."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
+          "operation": "modify",
+          "description": "Configure ZEGO UIKit Prebuilt to show/enable mic and camera toggles appropriate to the current role (at minimum for Host), relying on ZEGO built-in controls where possible and ensuring changes take effect immediately during the session. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Wire ZEGO kit token retrieval in the frontend so the live UI renders only after a token is obtained and shows actionable errors when token generation is unavailable/misconfigured.",
+      "acceptanceCriteria": [
+        "Backend exposes a callable method generateZegoKitToken(roomId: Text, userId: Text, userName: Text) that returns a kit token string, and returns a clear error when ZEGO credentials are not configured.",
+        "Frontend useZegoKitToken successfully calls generateZegoKitToken and renders the ZEGO live UI once the token is returned.",
+        "If ZEGO credentials are missing, the UI shows an English, actionable error state instead of a blank area."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useZegoKitToken.ts",
+          "operation": "modify",
+          "description": "Align token generation calls with the updated backend method signature (roomId + userId + userName), and improve error propagation so configuration/credential issues produce actionable English error messages for the UI."
+        },
+        {
+          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
+          "operation": "modify",
+          "description": "Ensure the live view renders clear loading and error states while waiting for a kit token, including a specific actionable message when ZEGO credentials are missing/misconfigured, instead of showing a blank/empty container. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Refactor the Room page media area into a single ZEGO real-time live view while keeping existing room metadata and interaction panels intact, and ensure proper lifecycle cleanup.",
+      "acceptanceCriteria": [
+        "RoomPage no longer shows the current 'Group Call' vs 'Stream' tabs.",
+        "RoomPage shows the ZEGO real-time live view in the media section while still rendering ChatPanel, MicQueuePanel, GiftsPanel, RecentGiftsFeed, etc. as before.",
+        "Navigation into/out of a room correctly initializes and cleans up the ZEGO instance without leaving behind orphaned DOM or leaking camera/mic capture."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RoomPage.tsx",
+          "operation": "modify",
+          "description": "Remove the tabbed media layout and render only the ZEGO live streaming view in the media section; keep existing metadata header and all existing panels (chat, mic queue, gifts, recent gifts, audio clips, follow) unchanged."
+        },
+        {
+          "path": "frontend/src/types/zego-uikit-prebuilt.d.ts",
+          "operation": "modify",
+          "description": "Extend ZEGO UIKit Prebuilt type definitions to cover the Live Streaming scenario and role configuration used by the new ZegoLiveStream component (e.g., LiveStreaming mode and Host/Audience role constants plus any joinRoom config fields needed). Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "kind": "build_request",
+  "title": "Replace Stream URL/HLS playback with ZEGO real-time camera live streaming (host/audience)",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Remove the Stream URL-based streaming flow from room creation and room viewing: eliminate the Stream URL field from the Create Room form, stop validating it, and stop rendering an HLS/MP4 <video src={room.streamUrl}> player anywhere in the Room page.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Remove the Stream URL input system.",
+          "No manual stream URL required",
+          "Real-time streaming, not HLS player"
+        ]
+      },
+      "acceptanceCriteria": [
+        "CreateRoomPage no longer displays or requires a Stream URL input.",
+        "RoomPage no longer renders a <video> element fed by a stored stream URL.",
+        "All user-facing validation/toast text related to Stream URL is removed or replaced with relevant messaging."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Update the backend room model and APIs to no longer require or store a stream URL: remove Room.streamUrl, change createRoom to accept only (title, description), and update getRoom/getAllRooms types accordingly so the frontend can compile against the generated backend types.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Remove the Stream URL input system.",
+          "Fix the architecture and rebuild properly."
+        ]
+      },
+      "acceptanceCriteria": [
+        "backend/main.mo Room type no longer includes streamUrl.",
+        "backend/main.mo createRoom signature no longer includes a streamUrl parameter and does not persist any URL.",
+        "Frontend TypeScript backend bindings compile after regenerating types (no references to Room.streamUrl remain)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement a dedicated ZEGO real-time live streaming experience (RTC) for each room using ZEGOCLOUD UIKit Prebuilt: the room owner can start/join as Host using device camera/mic, and non-owners can join as Audience to watch in real time (not HLS).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Host should start live using device camera",
+          "Audience should join and watch live",
+          "Proper ZEGOCLOUD RTC integration",
+          "Real-time streaming, not HLS player"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the room owner opens the room, the ZEGO UI joins the room in a host/live-streaming mode with camera available (subject to browser permissions).",
+        "When a non-owner opens the room, the ZEGO UI joins the room in an audience mode and can watch the host stream in real time.",
+        "No part of the live viewing experience depends on a stored URL."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add in-stream mic and camera controls for the host (and for any role where controls are applicable) so users can toggle microphone and camera during the live session.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Mic and camera controls"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The live streaming UI provides clear mic on/off and camera on/off controls (either via ZEGO built-in UI controls or explicit controls wired to the ZEGO instance).",
+        "Toggling mic/camera updates the local device capture state during an ongoing live session without requiring a page refresh."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Ensure ZEGO kit token generation is fully wired end-to-end: the frontend must obtain a token for the current authenticated user and room, and the backend must expose a generateZegoKitToken method that uses stored ZEGO credentials (app ID + server secret) to mint a kit token for the requested room/user.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Proper ZEGOCLOUD RTC integration",
+          "Fix the architecture and rebuild properly."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a callable method generateZegoKitToken(roomId: Text, userId: Text, userName: Text) that returns a kit token string, and returns a clear error when ZEGO credentials are not configured.",
+        "Frontend useZegoKitToken successfully calls generateZegoKitToken and renders the ZEGO live UI once the token is returned.",
+        "If ZEGO credentials are missing, the UI shows an English, actionable error state instead of a blank area."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Refactor the Room page media area to be a single, correct real-time live streaming view (host/audience) rather than a tabbed mix of GroupCall and Stream URL playback, and keep the existing room metadata, chat, mic queue, gifts, and follow UI intact.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Fix the architecture and rebuild properly."
+        ]
+      },
+      "acceptanceCriteria": [
+        "RoomPage no longer shows the current 'Group Call' vs 'Stream' tabs.",
+        "RoomPage shows the ZEGO real-time live view in the media section while still rendering ChatPanel, MicQueuePanel, GiftsPanel, RecentGiftsFeed, etc. as before.",
+        "Navigation into/out of a room correctly initializes and cleans up the ZEGO instance without leaving behind orphaned DOM or leaking camera/mic capture."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain single-actor (all Motoko logic in backend/main.mo).",
+    "Do not edit frontend paths listed as immutable: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "User-facing text must be in English.",
+    "Do not implement HLS-based playback as the primary live experience."
+  ],
+  "nonGoals": [
+    "Firebase Authentication, Firestore realtime chat, Firebase Storage profile photos, and React Native/Android project structure changes (not requested in the latest message).",
+    "Implementing one-to-one video call (not requested in the latest message).",
+    "Adding new gift types or payment rails beyond the existing gift UI logic."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

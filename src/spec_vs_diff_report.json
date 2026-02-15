@@ -1,0 +1,55 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-15T14:48:49.205Z",
+  "summary": "REQ-1 and REQ-2 appear implemented: Stream URL field/playback removed from frontend flow and Room model/createRoom updated to exclude streamUrl (with a migration added). ZEGO RTC view is added and used on RoomPage with host/audience roles and built-in mic/camera toggles. However, REQ-5 is not fully implemented per spec: the backend generateZegoKitToken method is not evidenced in the diff summary, and the frontend hook calls a differently-shaped method/signature (missing userName and using BigInt roomId). REQ-6 cleanup/keeping all existing panels cannot be fully verified from the truncated RoomPage diff.",
+  "missing_requirements": [
+    {
+      "id": "REQ-5",
+      "requirement": "Backend must expose generateZegoKitToken(roomId: Text, userId: Text, userName: Text) returning a kit token string and error clearly when ZEGO credentials are not configured; frontend must call it end-to-end and render ZEGO once token is returned.",
+      "reason": "No generateZegoKitToken method implementation is shown in backend/main.mo diff summary (only zegoServerSecretId/zegoAppId vars). Frontend useZegoKitToken calls (actor as any).generateZegoKitToken(roomIdBigInt, userId) which does not match the required signature (missing userName and uses BigInt roomId).",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useZegoKitToken.ts"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "RoomPage media area should be a single ZEGO real-time live view (no GroupCall vs Stream tabs) while keeping existing room metadata, chat, mic queue, gifts, follow UI intact, and properly cleaning up ZEGO on navigation.",
+      "reason": "RoomPage shows ZegoLiveStream in the media section, but the diff is truncated before the rest of the page; it is not fully verifiable from the provided summary that tabs were removed and that all existing panels (ChatPanel, MicQueuePanel, GiftsPanel, RecentGiftsFeed, etc.) remain rendered as before across the whole page.",
+      "evidence": [
+        "frontend/src/pages/RoomPage.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added a backend state migration module to transform old Room records (with streamUrl) into new Room records (without streamUrl).",
+      "reason": "BuildRequest did not explicitly request a data migration module/file; it may be helpful but is not specified as a requirement.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "Updated/modified ZegoGroupCall component despite the new requirement to refactor Room page to a single ZEGO live streaming view (and remove GroupCall/Stream tab mix).",
+      "reason": "BuildRequest does not request changes to GroupCall functionality; any work on this component is not directly requested (unless it was required for removal/cleanup, which is not evidenced here).",
+      "evidence": [
+        "frontend/src/components/room/ZegoGroupCall.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/room/ZegoGroupCall.tsx",
+    "frontend/src/components/room/ZegoLiveStream.tsx",
+    "frontend/src/hooks/useRooms.ts",
+    "frontend/src/hooks/useZegoKitToken.ts",
+    "frontend/src/pages/CreateRoomPage.tsx",
+    "frontend/src/pages/RoomPage.tsx",
+    "frontend/src/types/zego-uikit-prebuilt.d.ts",
+    "project_state.json"
+  ]
+}
