@@ -6,6 +6,9 @@ import ExploreRoomsPage from './pages/ExploreRoomsPage';
 import RoomPage from './pages/RoomPage';
 import CreateRoomPage from './pages/CreateRoomPage';
 import UserProfilePage from './pages/UserProfilePage';
+import ExploreGroupsPage from './pages/ExploreGroupsPage';
+import CreateGroupPage from './pages/CreateGroupPage';
+import GroupPage from './pages/GroupPage';
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -35,7 +38,33 @@ const profileRoute = createRoute({
   component: UserProfilePage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, roomRoute, createRoomRoute, profileRoute]);
+const groupsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/groups',
+  component: ExploreGroupsPage,
+});
+
+const createGroupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/create-group',
+  component: CreateGroupPage,
+});
+
+const groupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/group/$groupId',
+  component: GroupPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  roomRoute,
+  createRoomRoute,
+  profileRoute,
+  groupsRoute,
+  createGroupRoute,
+  groupRoute,
+]);
 
 const router = createRouter({ routeTree });
 

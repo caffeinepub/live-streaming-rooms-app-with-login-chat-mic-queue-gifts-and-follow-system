@@ -1,114 +1,100 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Replace Stream URL/HLS playback with ZEGO real-time camera live streaming (host/audience)",
+  "title": "Frontend Group Chat UI + React Query hooks",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Remove Stream URL inputs/validation from room creation and eliminate all Stream URL/HLS/MP4 video rendering from room viewing.",
+      "id": "REQ-2",
+      "summary": "Add Group Chat pages, routing, and navigation for group discovery, group creation, and group message feed with composer.",
       "acceptanceCriteria": [
-        "CreateRoomPage no longer displays or requires a Stream URL input.",
-        "RoomPage no longer renders a <video> element fed by a stored stream URL.",
-        "All user-facing validation/toast text related to Stream URL is removed or replaced with relevant messaging."
+        "App has a Group Chat entry point reachable from the main navigation (AppShell) and/or the home page.",
+        "Group list page shows existing groups with basic metadata and a clear action to open/join a group.",
+        "Authenticated users can create a group from the UI (with at least a name and optional description).",
+        "Group chat page shows messages, sender display names (reuse existing display-name utilities), and supports sending messages with validation (non-empty, reasonable max length).",
+        "UI uses polling via React Query (similar to existing room chat) to refresh group messages without requiring WebSockets.",
+        "All user-facing text added for the new feature is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/CreateRoomPage.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Remove streamUrl state, form field, helper text, and related validation/toasts; update the submit handler to create rooms using only title and description."
+          "description": "Register new Group Chat routes (group list/discovery page, create group page, and group room page) in the TanStack Router route tree, keeping existing routes intact."
         },
         {
-          "path": "frontend/src/hooks/useRooms.ts",
+          "path": "frontend/src/components/layout/AppShell.tsx",
           "operation": "modify",
-          "description": "Update the create-room mutation to stop accepting streamUrl and call the backend createRoom with only title and description (aligning with the updated backend types)."
+          "description": "Add a main navigation entry point for Group Chat (e.g., “Groups”), and an authenticated-only entry for “Create Group”, consistent with existing auth-aware nav patterns. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/RoomPage.tsx",
-          "operation": "modify",
-          "description": "Remove any references to room.streamUrl and delete the HLS/MP4 <video> rendering branch entirely so media is no longer URL-based."
+          "path": "frontend/src/pages/ExploreGroupsPage.tsx",
+          "operation": "create",
+          "description": "Create a group discovery/list page that loads groups, shows basic metadata (name, optional description, owner display name, created date), and provides clear actions to open a group and (when authenticated) join/leave via membership controls. Use existing UI primitives and existing query state helpers. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CreateGroupPage.tsx",
+          "operation": "create",
+          "description": "Create an authenticated group creation flow (name required, description optional) using RequireAuth, form validation, and toast feedback; navigate to the new group page after successful creation. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/GroupPage.tsx",
+          "operation": "create",
+          "description": "Create a group chat room page that displays group info, membership state (join/leave), and a message timeline with a composer. Show sender display names using the existing display-name hook and render timestamps consistently with the room chat. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/group/GroupChatPanel.tsx",
+          "operation": "create",
+          "description": "Create a reusable GroupChatPanel (Helo/Yo-like group feed experience) that shows messages in a scroll area and an authenticated composer. Validate message content (non-empty, max length aligned with room chat) and surface backend errors with user-friendly English messages. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/group/GroupMembershipControls.tsx",
+          "operation": "create",
+          "description": "Create a small component to display and toggle membership (join/leave) for authenticated users, showing appropriate disabled/loading states and error toasts. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Implement ZEGO UIKit Prebuilt real-time live streaming per room with owner as Host and others as Audience.",
+      "summary": "Add React Query hooks for Group Chat operations and integrate with the existing authenticated actor pattern and cache invalidation conventions.",
       "acceptanceCriteria": [
-        "When the room owner opens the room, the ZEGO UI joins the room in a host/live-streaming mode with camera available (subject to browser permissions).",
-        "When a non-owner opens the room, the ZEGO UI joins the room in an audience mode and can watch the host stream in real time.",
-        "No part of the live viewing experience depends on a stored URL."
+        "New hooks follow the same conventions as existing hooks (React Query query keys, invalidation on mutations).",
+        "When a user sends a group message, the message list updates via query invalidation/refetch.",
+        "Hooks gracefully handle the actor not being ready (return empty lists / disabled queries) consistent with current patterns."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/room/ZegoGroupCall.tsx",
-          "operation": "rename",
-          "description": "Rename this component to a dedicated live-stream view component (e.g., ZegoLiveStream) to reflect the new real-time host/audience streaming experience."
+          "path": "frontend/src/hooks/useGroups.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for group domain operations: listGroups, getGroup, createGroup, and query invalidation to keep the group list and group details up to date. Follow existing conventions from useRooms (query keys, enabled guards when actor is not ready)."
         },
         {
-          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
-          "operation": "modify",
-          "description": "Refactor the renamed component to use ZEGOCLOUD UIKit Prebuilt Live Streaming scenario with role selection (Host for room owner; Audience otherwise), using useZegoKitToken for token loading and ensuring instance cleanup on unmount. Verify the component's usage instructions before implementing."
+          "path": "frontend/src/hooks/useGroupMembership.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for membership operations: isGroupMember, getGroupMembers (if needed by UI), joinGroup, leaveGroup, with proper query keys and invalidation so membership state and member lists refresh after mutations."
         },
         {
-          "path": "frontend/src/pages/RoomPage.tsx",
-          "operation": "modify",
-          "description": "Replace the prior media UI with a single ZEGO real-time live streaming view by rendering the new ZegoLiveStream component and passing the role derived from room.owner vs current authenticated principal; do not render any tabbed media UI or URL-based player. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Provide in-stream mic and camera controls for the host (and other applicable roles) during live sessions.",
-      "acceptanceCriteria": [
-        "The live streaming UI provides clear mic on/off and camera on/off controls (either via ZEGO built-in UI controls or explicit controls wired to the ZEGO instance).",
-        "Toggling mic/camera updates the local device capture state during an ongoing live session without requiring a page refresh."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
-          "operation": "modify",
-          "description": "Configure ZEGO UIKit Prebuilt to show/enable mic and camera toggles appropriate to the current role (at minimum for Host), relying on ZEGO built-in controls where possible and ensuring changes take effect immediately during the session. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Wire ZEGO kit token retrieval in the frontend so the live UI renders only after a token is obtained and shows actionable errors when token generation is unavailable/misconfigured.",
-      "acceptanceCriteria": [
-        "Backend exposes a callable method generateZegoKitToken(roomId: Text, userId: Text, userName: Text) that returns a kit token string, and returns a clear error when ZEGO credentials are not configured.",
-        "Frontend useZegoKitToken successfully calls generateZegoKitToken and renders the ZEGO live UI once the token is returned.",
-        "If ZEGO credentials are missing, the UI shows an English, actionable error state instead of a blank area."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useZegoKitToken.ts",
-          "operation": "modify",
-          "description": "Align token generation calls with the updated backend method signature (roomId + userId + userName), and improve error propagation so configuration/credential issues produce actionable English error messages for the UI."
+          "path": "frontend/src/hooks/useGroupChat.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for group messaging: getGroupMessages with polling (similar to useChat), and sendGroupMessage mutation that invalidates/refetches the group messages query on success. Ensure hooks are disabled when actor is not ready and return safe empty defaults where appropriate."
         },
         {
-          "path": "frontend/src/components/room/ZegoLiveStream.tsx",
+          "path": "frontend/src/components/group/GroupChatPanel.tsx",
           "operation": "modify",
-          "description": "Ensure the live view renders clear loading and error states while waiting for a kit token, including a specific actionable message when ZEGO credentials are missing/misconfigured, instead of showing a blank/empty container. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Refactor the Room page media area into a single ZEGO real-time live view while keeping existing room metadata and interaction panels intact, and ensure proper lifecycle cleanup.",
-      "acceptanceCriteria": [
-        "RoomPage no longer shows the current 'Group Call' vs 'Stream' tabs.",
-        "RoomPage shows the ZEGO real-time live view in the media section while still rendering ChatPanel, MicQueuePanel, GiftsPanel, RecentGiftsFeed, etc. as before.",
-        "Navigation into/out of a room correctly initializes and cleans up the ZEGO instance without leaving behind orphaned DOM or leaking camera/mic capture."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/RoomPage.tsx",
-          "operation": "modify",
-          "description": "Remove the tabbed media layout and render only the ZEGO live streaming view in the media section; keep existing metadata header and all existing panels (chat, mic queue, gifts, recent gifts, audio clips, follow) unchanged."
+          "description": "Wire GroupChatPanel to the new hooks (message polling + send mutation), and ensure on send success the list refreshes via invalidation/refetch consistent with existing room chat behavior. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/types/zego-uikit-prebuilt.d.ts",
+          "path": "frontend/src/pages/ExploreGroupsPage.tsx",
           "operation": "modify",
-          "description": "Extend ZEGO UIKit Prebuilt type definitions to cover the Live Streaming scenario and role configuration used by the new ZegoLiveStream component (e.g., LiveStreaming mode and Host/Audience role constants plus any joinRoom config fields needed). Verify the component's usage instructions before implementing."
+          "description": "Connect the group list page to the new listGroups hook, handle loading/error/empty states consistently with existing pages, and ensure navigation into GroupPage is wired. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CreateGroupPage.tsx",
+          "operation": "modify",
+          "description": "Connect the create group form to the new createGroup hook and invalidate the group list on success, matching existing mutation patterns (e.g., CreateRoomPage + useRooms). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/GroupPage.tsx",
+          "operation": "modify",
+          "description": "Connect GroupPage to getGroup, membership hooks, and group message hooks; ensure membership actions invalidate membership and message queries as needed and that unauthenticated users can still browse group info/messages (UI gating only for create/join/send). Verify the component's usage instructions before implementing."
         }
       ]
     }

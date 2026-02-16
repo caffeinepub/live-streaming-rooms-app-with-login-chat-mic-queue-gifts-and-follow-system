@@ -1,109 +1,90 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T14:48:49.208Z",
+  "generatedAt": "2026-02-15T16:03:50.025Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 5,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove the Stream URL-based streaming flow from room creation and room viewing: eliminate the Stream URL field from the Create Room form, stop validating it, and stop rendering an HLS/MP4 <video src={room.streamUrl}> player anywhere in the Room page.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/CreateRoomPage.tsx",
-          "frontend/src/hooks/useRooms.ts",
-          "frontend/src/pages/RoomPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/CreateRoomPage.tsx",
-          "frontend/src/hooks/useRooms.ts",
-          "frontend/src/pages/RoomPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Update the backend room model and APIs to no longer require or store a stream URL: remove Room.streamUrl, change createRoom to accept only (title, description), and update getRoom/getAllRooms types accordingly so the frontend can compile against the generated backend types.",
+        "summary": "Implement a persistent Group Chat domain in the Motoko backend that supports creating groups, listing groups, viewing a group, joining/leaving a group, and posting/reading group messages (separate from the existing per-room chat).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
+        "id": "REQ-2",
+        "summary": "Add frontend pages and routing for Group Chat: a group discovery/list page, a group creation flow, and a group chat room page with message timeline and composer (Helo/Yo-like group feed experience).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/ExploreGroupsPage.tsx",
+          "frontend/src/pages/CreateGroupPage.tsx",
+          "frontend/src/pages/GroupPage.tsx",
+          "frontend/src/components/group/GroupChatPanel.tsx",
+          "frontend/src/components/group/GroupMembershipControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/ExploreGroupsPage.tsx",
+          "frontend/src/pages/CreateGroupPage.tsx",
+          "frontend/src/pages/GroupPage.tsx",
+          "frontend/src/components/group/GroupChatPanel.tsx",
+          "frontend/src/components/group/GroupMembershipControls.tsx"
+        ]
+      },
+      {
         "id": "REQ-3",
-        "summary": "Implement a dedicated ZEGO real-time live streaming experience (RTC) for each room using ZEGOCLOUD UIKit Prebuilt: the room owner can start/join as Host using device camera/mic, and non-owners can join as Audience to watch in real time (not HLS).",
+        "summary": "Create React Query hooks for Group Chat operations (list groups, get group, membership actions, send/fetch messages) and integrate them with the existing authenticated actor pattern.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/room/ZegoGroupCall.tsx",
-          "frontend/src/components/room/ZegoLiveStream.tsx",
-          "frontend/src/pages/RoomPage.tsx"
+          "frontend/src/hooks/useGroups.ts",
+          "frontend/src/hooks/useGroupMembership.ts",
+          "frontend/src/hooks/useGroupChat.ts",
+          "frontend/src/components/group/GroupChatPanel.tsx",
+          "frontend/src/pages/ExploreGroupsPage.tsx",
+          "frontend/src/pages/CreateGroupPage.tsx",
+          "frontend/src/pages/GroupPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/room/ZegoGroupCall.tsx",
-          "frontend/src/components/room/ZegoLiveStream.tsx",
-          "frontend/src/pages/RoomPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Add in-stream mic and camera controls for the host (and for any role where controls are applicable) so users can toggle microphone and camera during the live session.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/room/ZegoLiveStream.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/room/ZegoLiveStream.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Ensure ZEGO kit token generation is fully wired end-to-end: the frontend must obtain a token for the current authenticated user and room, and the backend must expose a generateZegoKitToken method that uses stored ZEGO credentials (app ID + server secret) to mint a kit token for the requested room/user.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useZegoKitToken.ts",
-          "frontend/src/components/room/ZegoLiveStream.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useZegoKitToken.ts",
-          "frontend/src/components/room/ZegoLiveStream.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Refactor the Room page media area to be a single, correct real-time live streaming view (host/audience) rather than a tabbed mix of GroupCall and Stream URL playback, and keep the existing room metadata, chat, mic queue, gifts, and follow UI intact.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/RoomPage.tsx",
-          "frontend/src/types/zego-uikit-prebuilt.d.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/RoomPage.tsx",
-          "frontend/src/types/zego-uikit-prebuilt.d.ts"
+          "frontend/src/hooks/useGroups.ts",
+          "frontend/src/hooks/useGroupMembership.ts",
+          "frontend/src/hooks/useGroupChat.ts",
+          "frontend/src/components/group/GroupChatPanel.tsx",
+          "frontend/src/pages/ExploreGroupsPage.tsx",
+          "frontend/src/pages/CreateGroupPage.tsx",
+          "frontend/src/pages/GroupPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/room/ZegoGroupCall.tsx",
-    "frontend/src/components/room/ZegoLiveStream.tsx",
+    "frontend/src/components/group/GroupChatPanel.tsx",
+    "frontend/src/components/group/GroupMembershipControls.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useRooms.ts",
-    "frontend/src/hooks/useZegoKitToken.ts",
-    "frontend/src/pages/CreateRoomPage.tsx",
-    "frontend/src/pages/RoomPage.tsx",
-    "frontend/src/types/zego-uikit-prebuilt.d.ts",
+    "frontend/src/hooks/useGroupChat.ts",
+    "frontend/src/hooks/useGroupMembership.ts",
+    "frontend/src/hooks/useGroups.ts",
+    "frontend/src/pages/CreateGroupPage.tsx",
+    "frontend/src/pages/ExploreGroupsPage.tsx",
+    "frontend/src/pages/GroupPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,14 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Replace Stream URL/HLS playback with ZEGO real-time camera live streaming per room, supporting host (owner) and audience (non-owner) roles.
+**Goal:** Add a persistent Helo/Yo-style Group Chat feature with groups, membership, and group messaging alongside the existing per-room chat.
 
 **Planned changes:**
-- Remove the Stream URL field and all related validation/messaging from room creation and viewing.
-- Update backend room model and APIs to stop storing/requiring `streamUrl` (create room with title/description only) and regenerate frontend types to match.
-- Add ZEGO UIKit Prebuilt RTC live view to the Room page: owner joins as Host (camera/mic), others join as Audience (watch in real time).
-- Provide in-stream mic and camera toggle controls (via ZEGO built-in controls or wired controls).
-- Implement end-to-end ZEGO kit token flow: backend `generateZegoKitToken(roomId, userId, userName)` using stored ZEGO credentials; frontend fetches token and shows actionable English errors if not configured.
-- Refactor Room page media area into a single ZEGO real-time live streaming view (remove existing “Group Call” vs “Stream” tabs) while keeping existing metadata, chat, mic queue, gifts, follow UI; ensure proper init/cleanup on navigation.
+- Extend the Motoko backend with a Group Chat domain stored in canister state, including methods to create groups, browse/view groups, join/leave groups, and send/read group messages with sender Principal and timestamp.
+- Enforce access rules: only authenticated users can create groups and send messages; membership is required to post in members-only groups (with clear errors when not a member).
+- Add frontend Group Chat pages and routing: group discovery/list, group creation flow, and a group chat room page with message timeline and composer.
+- Implement React Query hooks for group operations (list/get groups, membership actions, send/fetch messages) using the existing authenticated actor pattern, polling for updates and invalidating/refetching after mutations.
+- Ensure all new user-facing UI text for this feature is in English.
 
-**User-visible outcome:** Creating a room no longer asks for a stream URL; opening a room starts a real-time ZEGO live session where the owner can go live with camera/mic (with mic/cam controls) and other users can join as audience to watch, with existing room UI features remaining available.
+**User-visible outcome:** Users can browse available groups, create a group (when authenticated), join/leave groups, and read/post messages in group chats with a feed-like experience that updates via polling.

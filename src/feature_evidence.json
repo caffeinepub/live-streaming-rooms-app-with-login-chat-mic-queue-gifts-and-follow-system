@@ -2,12 +2,16 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-the-stream-url-based-streaming-flow-from-room-creation-and-room-viewing-eliminate-the-stream-url-field-from-the-create-room-form-stop-validating-it-and-stop-rendering-an-hls-mp4-video-src-room-streamurl-player-anywhere-in-the-room-page",
-      "featureTitle": "Remove the Stream URL-based streaming flow from room creation and room viewing: eliminate the Stream URL field from the Create Room form, stop validating it, and stop rendering an HLS/MP4 <video src={room.streamUrl}> player anywhere in the Room page.",
+      "featureId": "feature-add-frontend-pages-and-routing-for-group-chat-a-group-discovery-list-page-a-group-creation-flow-and-a-group-chat-room-page-with-message-timeline-and-composer-helo-yo-like-group-feed-experience",
+      "featureTitle": "Add frontend pages and routing for Group Chat: a group discovery/list page, a group creation flow, and a group chat room page with message timeline and composer (Helo/Yo-like group feed experience).",
       "files": [
-        "frontend/src/hooks/useRooms.ts",
-        "frontend/src/pages/CreateRoomPage.tsx",
-        "frontend/src/pages/RoomPage.tsx"
+        "frontend/src/App.tsx",
+        "frontend/src/components/group/GroupChatPanel.tsx",
+        "frontend/src/components/group/GroupMembershipControls.tsx",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/pages/CreateGroupPage.tsx",
+        "frontend/src/pages/ExploreGroupsPage.tsx",
+        "frontend/src/pages/GroupPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -15,20 +19,25 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-a-dedicated-zego-real-time-live-streaming-experience-rtc-for-each-room-using-zegocloud-uikit-prebuilt-the-room-owner-can-start-join-as-host-using-device-camera-mic-and-non-owners-can-join-as-audience-to-watch-in-real-time-not-hls",
-      "featureTitle": "Implement a dedicated ZEGO real-time live streaming experience (RTC) for each room using ZEGOCLOUD UIKit Prebuilt: the room owner can start/join as Host using device camera/mic, and non-owners can join as Audience to watch in real time (not HLS).",
+      "featureId": "feature-create-react-query-hooks-for-group-chat-operations-list-groups-get-group-membership-actions-send-fetch-messages-and-integrate-them-with-the-existing-authenticated-actor-pattern",
+      "featureTitle": "Create React Query hooks for Group Chat operations (list groups, get group, membership actions, send/fetch messages) and integrate them with the existing authenticated actor pattern.",
       "files": [
-        "frontend/src/components/room/ZegoGroupCall.tsx",
-        "frontend/src/components/room/ZegoLiveStream.tsx",
-        "frontend/src/pages/RoomPage.tsx"
+        "frontend/src/components/group/GroupChatPanel.tsx",
+        "frontend/src/hooks/useGroupChat.ts",
+        "frontend/src/hooks/useGroupMembership.ts",
+        "frontend/src/hooks/useGroups.ts",
+        "frontend/src/pages/CreateGroupPage.tsx",
+        "frontend/src/pages/ExploreGroupsPage.tsx",
+        "frontend/src/pages/GroupPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -36,69 +45,11 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "camera@1.0.0"
       ],
       "testIds": [
         "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-in-stream-mic-and-camera-controls-for-the-host-and-for-any-role-where-controls-are-applicable-so-users-can-toggle-microphone-and-camera-during-the-live-session",
-      "featureTitle": "Add in-stream mic and camera controls for the host (and for any role where controls are applicable) so users can toggle microphone and camera during the live session.",
-      "files": [
-        "frontend/src/components/room/ZegoLiveStream.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-zego-kit-token-generation-is-fully-wired-end-to-end-the-frontend-must-obtain-a-token-for-the-current-authenticated-user-and-room-and-the-backend-must-expose-a-generatezegokittoken-method-that-uses-stored-zego-credentials-app-id-server-secret-to-mint-a-kit-token-for-the-requested-room-user",
-      "featureTitle": "Ensure ZEGO kit token generation is fully wired end-to-end: the frontend must obtain a token for the current authenticated user and room, and the backend must expose a generateZegoKitToken method that uses stored ZEGO credentials (app ID + server secret) to mint a kit token for the requested room/user.",
-      "files": [
-        "frontend/src/components/room/ZegoLiveStream.tsx",
-        "frontend/src/hooks/useZegoKitToken.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-refactor-the-room-page-media-area-to-be-a-single-correct-real-time-live-streaming-view-host-audience-rather-than-a-tabbed-mix-of-groupcall-and-stream-url-playback-and-keep-the-existing-room-metadata-chat-mic-queue-gifts-and-follow-ui-intact",
-      "featureTitle": "Refactor the Room page media area to be a single, correct real-time live streaming view (host/audience) rather than a tabbed mix of GroupCall and Stream URL playback, and keep the existing room metadata, chat, mic queue, gifts, and follow UI intact.",
-      "files": [
-        "frontend/src/pages/RoomPage.tsx",
-        "frontend/src/types/zego-uikit-prebuilt.d.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
       ],
       "confidence": "high"
     }

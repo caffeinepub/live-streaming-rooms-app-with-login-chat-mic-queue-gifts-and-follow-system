@@ -13,11 +13,11 @@ import Principal "mo:core/Principal";
 import VarArray "mo:core/VarArray";
 import Order "mo:core/Order";
 import Iter "mo:core/Iter";
-import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
+// (with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -423,9 +423,9 @@ actor {
   };
 
   ///////////////////////
-  // ZEGO Kit Token   //
+  // Legacy "tokens"   //
   ///////////////////////
-  
+
   public shared ({ caller }) func storeZegoCredentials(secretId : Text, appId : Text) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admin can store server secrets");
@@ -434,31 +434,202 @@ actor {
     zegoAppId := ?appId;
   };
 
-  public shared ({ caller }) func generateZegoKitToken(roomId : Nat, userId : Text) : async Text {
-    // Only authenticated users can generate tokens for themselves
+  public shared ({ caller }) func generateHostToken(roomId : Nat, userId : Text) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can generate ZEGO kit tokens");
+      Runtime.trap("Unauthorized: Only users can generate Host tokens");
     };
-    
-    // Verify the room exists
     switch (rooms.get(roomId)) {
       case (null) { Runtime.trap("Room not found") };
       case (?room) {
-        // Verify credentials are configured
-        switch (zegoAppId, zegoServerSecretId) {
-          case (?appId, ?secretId) {
-            // In a real implementation, this would use HMAC-SHA256 to generate
-            // a proper ZEGO token. For now, return a placeholder that includes
-            // the necessary information for the frontend to work with.
-            // The actual token generation would require crypto libraries.
-            let tokenPayload = "appId=" # appId # "&roomId=" # roomId.toText() # "&userId=" # userId # "&secret=" # secretId;
-            tokenPayload;
-          };
-          case _ {
-            Runtime.trap("ZEGO credentials not configured. Admin must call storeZegoCredentials first.");
+        if (room.owner != caller) {
+          Runtime.trap("Unauthorized: Only room owner can generate Host tokens for this room");
+        };
+        generateZegoKitTokenInternal(roomId, userId, true);
+      };
+    };
+  };
+
+  public shared ({ caller }) func generateAudienceToken(roomId : Nat, userId : Text) : async Text {
+    // Anyone can generate Audience tokens
+    // Anonymous principal is allowed
+    switch (rooms.get(roomId)) {
+      case (null) { Runtime.trap("Room not found") };
+      case (?_room) {
+        generateZegoKitTokenInternal(roomId, userId, false);
+      };
+    };
+  };
+
+  func generateZegoKitTokenInternal(roomId : Nat, userId : Text, isHost : Bool) : Text {
+    switch (zegoAppId, zegoServerSecretId) {
+      case (?appId, ?_secretId) {
+        // In a real implementation, this would use HMAC-SHA256 to generate
+        // a proper ZEGO token. For now, return a placeholder that includes
+        // the necessary information for the frontend to work with.
+        // The actual token generation would require crypto libraries.
+        let roleString = if (isHost) { "host" } else {
+          "audience";
+        };
+        let tokenPayload = "appId=" # appId # "&roomId=" # roomId.toText() # "&userId=" # userId # "&role=" # roleString;
+        return tokenPayload;
+      };
+      case _ {
+        Runtime.trap("ZEGO credentials not configured. Admin must call storeZegoCredentials first.");
+      };
+    };
+  };
+
+  ///////////////////////
+  // Group Chats      //
+  ///////////////////////
+
+  public type Group = {
+    id : Nat;
+    owner : Principal;
+    name : Text;
+    description : ?Text;
+    createdAt : Time.Time;
+  };
+
+  public type GroupMember = {
+    groupId : Nat;
+    user : Principal;
+    joinedAt : Time.Time;
+  };
+
+  let groups = Map.empty<Nat, Group>();
+  let groupMembers = Map.empty<Nat, Set.Set<Principal>>();
+  let groupChats = Map.empty<Nat, List.List<ChatMessage>>();
+  var nextGroupId = 1;
+
+  public shared ({ caller }) func createGroup(name : Text, description : ?Text) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create groups");
+    };
+    let groupId = nextGroupId;
+    nextGroupId += 1;
+
+    let group : Group = {
+      id = groupId;
+      owner = caller;
+      name;
+      description;
+      createdAt = Time.now();
+    };
+    groups.add(groupId, group);
+
+    let initialMembers = Set.empty<Principal>();
+    initialMembers.add(caller);
+    groupMembers.add(groupId, initialMembers);
+    groupId;
+  };
+
+  public query ({ caller }) func listGroups() : async [Group] {
+    // Public - anyone can see groups
+    groups.values().toArray();
+  };
+
+  public query ({ caller }) func getGroup(groupId : Nat) : async ?Group {
+    // Public - anyone can see group info
+    groups.get(groupId);
+  };
+
+  public shared ({ caller }) func joinGroup(groupId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can join groups");
+    };
+    switch (groups.get(groupId)) {
+      case (null) { Runtime.trap("Group not found") };
+      case (?_group) {
+        let members = switch (groupMembers.get(groupId)) {
+          case (?existing) { existing };
+          case (null) { Set.empty<Principal>() };
+        };
+        switch (members.contains(caller)) {
+          case (true) { Runtime.trap("Already a group member") };
+          case (false) {
+            members.add(caller);
+            groupMembers.add(groupId, members);
           };
         };
       };
+    };
+  };
+
+  public shared ({ caller }) func leaveGroup(groupId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can leave groups");
+    };
+    switch (groups.get(groupId)) {
+      case (null) { Runtime.trap("Group not found") };
+      case (?_group) {
+        let members = switch (groupMembers.get(groupId)) {
+          case (?existing) { existing };
+          case (null) { Set.empty<Principal>() };
+        };
+        switch (members.contains(caller)) {
+          case (true) {
+            members.remove(caller);
+            groupMembers.add(groupId, members);
+          };
+          case (false) { Runtime.trap("Not a group member") };
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func getGroupMembers(groupId : Nat) : async [Principal] {
+    // Public - anyone can see group members
+    switch (groupMembers.get(groupId)) {
+      case (null) { switch (groups.get(groupId)) { case (null) { Runtime.trap("No such group") }; case (_) { Runtime.trap("No members found") } } };
+      case (?members) { members.toArray() };
+    };
+  };
+
+  public shared ({ caller }) func sendGroupMessage(groupId : Nat, content : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can send messages");
+    };
+
+    switch (groups.get(groupId), groupMembers.get(groupId)) {
+      case (?_group, ?members) {
+        if (not members.contains(caller)) {
+          Runtime.trap("Unauthorized: Not a group member");
+        };
+      };
+      case _ { Runtime.trap("Group not found") };
+    };
+
+    let message : ChatMessage = {
+      sender = caller;
+      content;
+      timestamp = Time.now();
+    };
+    let messages = switch (groupChats.get(groupId)) {
+      case (?msgs) { msgs };
+      case (null) { List.empty<ChatMessage>() };
+    };
+    messages.add(message);
+    groupChats.add(groupId, messages);
+  };
+
+  public query ({ caller }) func getGroupMessages(groupId : Nat) : async [ChatMessage] {
+    switch (groups.get(groupId)) {
+      case (null) { Runtime.trap("No such group") };
+      case (_group) {
+        switch (groupChats.get(groupId)) {
+          case (null) { [] };
+          case (?msgs) { msgs.toArray() };
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func isGroupMember(groupId : Nat, user : Principal) : async Bool {
+    // Public - anyone can check group membership
+    switch (groupMembers.get(groupId)) {
+      case (?members) { members.contains(user) };
+      case (null) { false };
     };
   };
 };

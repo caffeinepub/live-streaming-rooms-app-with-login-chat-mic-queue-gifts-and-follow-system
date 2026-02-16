@@ -1,55 +1,53 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T14:48:49.205Z",
-  "summary": "REQ-1 and REQ-2 appear implemented: Stream URL field/playback removed from frontend flow and Room model/createRoom updated to exclude streamUrl (with a migration added). ZEGO RTC view is added and used on RoomPage with host/audience roles and built-in mic/camera toggles. However, REQ-5 is not fully implemented per spec: the backend generateZegoKitToken method is not evidenced in the diff summary, and the frontend hook calls a differently-shaped method/signature (missing userName and using BigInt roomId). REQ-6 cleanup/keeping all existing panels cannot be fully verified from the truncated RoomPage diff.",
+  "generatedAt": "2026-02-15T16:03:50.020Z",
+  "summary": "Frontend implementation for Group Chat pages, routing, UI panels, and React Query hooks is present (groups list, create group, group page with membership controls and chat polling). Backend changes for the required persistent group domain and stable canister methods are not evidenced in the provided truncated backend diff, so REQ-1 cannot be verified as implemented.",
   "missing_requirements": [
     {
-      "id": "REQ-5",
-      "requirement": "Backend must expose generateZegoKitToken(roomId: Text, userId: Text, userName: Text) returning a kit token string and error clearly when ZEGO credentials are not configured; frontend must call it end-to-end and render ZEGO once token is returned.",
-      "reason": "No generateZegoKitToken method implementation is shown in backend/main.mo diff summary (only zegoServerSecretId/zegoAppId vars). Frontend useZegoKitToken calls (actor as any).generateZegoKitToken(roomIdBigInt, userId) which does not match the required signature (missing userName and uses BigInt roomId).",
+      "id": "REQ-1",
+      "requirement": "Implement a persistent Group Chat domain in the Motoko backend with stable canister methods: createGroup, listGroups, getGroup, joinGroup, leaveGroup, sendGroupMessage, getGroupMessages; store data in canister state; enforce auth and members-only messaging rules; messages include sender Principal, content, timestamp.",
+      "reason": "The backend/main.mo diff snippet is truncated and only shows existing user/room/chat structures; it does not show any Group types/state or the required group-related canister methods, nor evidence of stable persistence for the new domain.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useZegoKitToken.ts"
+        "backend/main.mo (truncated; only shows User Profiles, Rooms, and start of Chat/sendMessage)"
       ]
     },
     {
-      "id": "REQ-6",
-      "requirement": "RoomPage media area should be a single ZEGO real-time live view (no GroupCall vs Stream tabs) while keeping existing room metadata, chat, mic queue, gifts, follow UI intact, and properly cleaning up ZEGO on navigation.",
-      "reason": "RoomPage shows ZegoLiveStream in the media section, but the diff is truncated before the rest of the page; it is not fully verifiable from the provided summary that tabs were removed and that all existing panels (ChatPanel, MicQueuePanel, GiftsPanel, RecentGiftsFeed, etc.) remain rendered as before across the whole page.",
+      "id": "REQ-3",
+      "requirement": "Create React Query hooks for Group Chat operations including membership actions, integrated with the existing authenticated actor pattern.",
+      "reason": "Hooks for list/get/create groups and send/fetch group messages are present, and join/leave exist, but the BuildRequest explicitly calls for hooks for Group Chat operations; the diff provides hooks split across multiple files and does not show a hook for fetching a group's info via the same 'Group Chat operations' module, nor does it show hook coverage for all backend methods listed in REQ-1 (notably getGroupMessages/sendGroupMessage exist; list/get/create exist; join/leave exist; however backend-required methods are not verifiable). This is only partially verifiable given backend truncation.",
       "evidence": [
-        "frontend/src/pages/RoomPage.tsx"
+        "frontend/src/hooks/useGroupChat.ts",
+        "frontend/src/hooks/useGroupMembership.ts",
+        "frontend/src/hooks/useGroups.ts",
+        "backend/main.mo (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a backend state migration module to transform old Room records (with streamUrl) into new Room records (without streamUrl).",
-      "reason": "BuildRequest did not explicitly request a data migration module/file; it may be helpful but is not specified as a requirement.",
+      "description": "Additional backend API expectations for group membership introspection (isGroupMember, getGroupMembers) used by frontend hooks/components.",
+      "reason": "These methods are called from new frontend hooks/components but are not part of the requested backend method list in REQ-1 acceptance criteria (which lists only createGroup, listGroups, getGroup, joinGroup, leaveGroup, sendGroupMessage, getGroupMessages).",
       "evidence": [
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "description": "Updated/modified ZegoGroupCall component despite the new requirement to refactor Room page to a single ZEGO live streaming view (and remove GroupCall/Stream tab mix).",
-      "reason": "BuildRequest does not request changes to GroupCall functionality; any work on this component is not directly requested (unless it was required for removal/cleanup, which is not evidenced here).",
-      "evidence": [
-        "frontend/src/components/room/ZegoGroupCall.tsx"
+        "frontend/src/hooks/useGroupMembership.ts (calls actor.isGroupMember and actor.getGroupMembers)",
+        "frontend/src/components/group/GroupMembershipControls.tsx (uses useIsGroupMember)"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.64,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/room/ZegoGroupCall.tsx",
-    "frontend/src/components/room/ZegoLiveStream.tsx",
-    "frontend/src/hooks/useRooms.ts",
-    "frontend/src/hooks/useZegoKitToken.ts",
-    "frontend/src/pages/CreateRoomPage.tsx",
-    "frontend/src/pages/RoomPage.tsx",
-    "frontend/src/types/zego-uikit-prebuilt.d.ts",
+    "frontend/src/App.tsx",
+    "frontend/src/components/group/GroupChatPanel.tsx",
+    "frontend/src/components/group/GroupMembershipControls.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/hooks/useGroupChat.ts",
+    "frontend/src/hooks/useGroupMembership.ts",
+    "frontend/src/hooks/useGroups.ts",
+    "frontend/src/pages/CreateGroupPage.tsx",
+    "frontend/src/pages/ExploreGroupsPage.tsx",
+    "frontend/src/pages/GroupPage.tsx",
     "project_state.json"
   ]
 }

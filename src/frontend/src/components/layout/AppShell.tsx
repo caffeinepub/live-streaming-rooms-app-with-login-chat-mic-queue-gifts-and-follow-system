@@ -2,7 +2,7 @@ import { Outlet, Link, useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
-import { Home, PlusCircle, User, Heart } from 'lucide-react';
+import { Home, PlusCircle, User, Heart, Users, MessageCircle } from 'lucide-react';
 import LoginButton from '@/components/auth/LoginButton';
 import ProfileSetupDialog from '@/components/auth/ProfileSetupDialog';
 
@@ -33,12 +33,24 @@ export default function AppShell() {
                   Explore
                 </Link>
               </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/groups">
+                  <Users className="h-4 w-4 mr-2" />
+                  Groups
+                </Link>
+              </Button>
               {isAuthenticated && (
                 <>
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/create-room">
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Create Room
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/create-group">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Create Group
                     </Link>
                   </Button>
                   <Button 

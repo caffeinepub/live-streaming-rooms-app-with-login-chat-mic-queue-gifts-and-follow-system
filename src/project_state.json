@@ -1,51 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Build a production-ready mobile live streaming + chat app named \"ZegoStream\" using proper React Native or full Android project structure, integrating Firebase (Auth/Firestore/Storage) and ZEGOCLOUD RTC for real camera-based host/audience live rooms plus 1:1 video calling, with modern dark UI and bottom navigation; remove any manual Stream URL/HLS approach and fix prior build/architecture issues.",
+  "summary": "Build a production-ready mobile/web app combining ZEGOCLOUD live streaming (live rooms with host/guest, backend token generation, camera/mic streaming, remote user display, proper leave/cleanup) plus social features like dating, direct chat, and group chat similar to apps like Helo/Yo.",
   "architectural_notes": [
-    "Do not use HTML CDN scripts; integrate SDKs via proper mobile project dependencies/build tooling.",
-    "Live streaming must be ZEGOCLOUD RTC camera-based host/audience rooms (no manual Stream URL input; not an HLS player approach)."
+    "Use ZEGOCLOUD live streaming with AppID 769939428; generate tokens on a backend service before joining rooms (do not embed server secret in frontend for production)."
   ],
   "known_issues": [],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-remove-the-stream-url-based-streaming-flow-from-room-creation-and-room-viewing-eliminate-the-stream-url-field-from-the-create-room-form-stop-validating-it-and-stop-rendering-an-hls-mp4-video-src-room-streamurl-player-anywhere-in-the-room-page",
-      "title": "Remove the Stream URL-based streaming flow from room creation and room viewing: eliminate the Stream URL field from the Create Room form, stop validating it, and stop rendering an HLS/MP4 <video src={room.streamUrl}> player anywhere in the Room page.",
+      "id": "feature-add-frontend-pages-and-routing-for-group-chat-a-group-discovery-list-page-a-group-creation-flow-and-a-group-chat-room-page-with-message-timeline-and-composer-helo-yo-like-group-feed-experience",
+      "title": "Add frontend pages and routing for Group Chat: a group discovery/list page, a group creation flow, and a group chat room page with message timeline and composer (Helo/Yo-like group feed experience).",
       "reqIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-implement-a-dedicated-zego-real-time-live-streaming-experience-rtc-for-each-room-using-zegocloud-uikit-prebuilt-the-room-owner-can-start-join-as-host-using-device-camera-mic-and-non-owners-can-join-as-audience-to-watch-in-real-time-not-hls",
-      "title": "Implement a dedicated ZEGO real-time live streaming experience (RTC) for each room using ZEGOCLOUD UIKit Prebuilt: the room owner can start/join as Host using device camera/mic, and non-owners can join as Audience to watch in real time (not HLS).",
+      "id": "feature-create-react-query-hooks-for-group-chat-operations-list-groups-get-group-membership-actions-send-fetch-messages-and-integrate-them-with-the-existing-authenticated-actor-pattern",
+      "title": "Create React Query hooks for Group Chat operations (list groups, get group, membership actions, send/fetch messages) and integrate them with the existing authenticated actor pattern.",
       "reqIds": [
         "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-in-stream-mic-and-camera-controls-for-the-host-and-for-any-role-where-controls-are-applicable-so-users-can-toggle-microphone-and-camera-during-the-live-session",
-      "title": "Add in-stream mic and camera controls for the host (and for any role where controls are applicable) so users can toggle microphone and camera during the live session.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-zego-kit-token-generation-is-fully-wired-end-to-end-the-frontend-must-obtain-a-token-for-the-current-authenticated-user-and-room-and-the-backend-must-expose-a-generatezegokittoken-method-that-uses-stored-zego-credentials-app-id-server-secret-to-mint-a-kit-token-for-the-requested-room-user",
-      "title": "Ensure ZEGO kit token generation is fully wired end-to-end: the frontend must obtain a token for the current authenticated user and room, and the backend must expose a generateZegoKitToken method that uses stored ZEGO credentials (app ID + server secret) to mint a kit token for the requested room/user.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-refactor-the-room-page-media-area-to-be-a-single-correct-real-time-live-streaming-view-host-audience-rather-than-a-tabbed-mix-of-groupcall-and-stream-url-playback-and-keep-the-existing-room-metadata-chat-mic-queue-gifts-and-follow-ui-intact",
-      "title": "Refactor the Room page media area to be a single, correct real-time live streaming view (host/audience) rather than a tabbed mix of GroupCall and Stream URL playback, and keep the existing room metadata, chat, mic queue, gifts, and follow UI intact.",
-      "reqIds": [
-        "REQ-6"
       ],
       "version": 1
     }
@@ -53,75 +28,45 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Create mobile app project structure for \"ZegoStream\" (proper React Native or full Android structure; production-ready; no HTML CDN scripts)",
+      "summary": "Implement ZEGOCLOUD live room system (host creates room, join via AppID 769939428, enable camera/mic, real-time streaming, show remote users, handle leave/cleanup)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Integrate Firebase Authentication (Email + Google login)",
+      "summary": "Add backend API to generate ZEGOCLOUD tokens before users join rooms (production-safe token generation)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Implement Firestore-based realtime chat",
+      "summary": "Add dating feature/module (profiles + matching flow) integrated with the app",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Use Firebase Storage for user profile photos",
+      "summary": "Add chat module (1:1 messaging)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "Integrate ZEGOCLOUD SDK with proper RTC (no HLS player; real-time streaming)",
+      "summary": "Add group chat feature similar to Helo/Yo-style group chat experience",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-6",
-      "summary": "Live streaming rooms: host starts live via device camera; audience joins and watches (no manual Stream URL required)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "One-to-one video call feature using ZEGOCLOUD",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "In-call/stream controls: mic on/off and camera on/off buttons",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Gift sending UI during live streams",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "UI/UX: dark modern UI with bottom navigation (Home, Live, Chat, Profile)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Update the backend room model and APIs to no longer require or store a stream URL: remove Room.streamUrl, change createRoom to accept only (title, description), and update getRoom/getAllRooms types accordingly so the frontend can compile against the generated backend types.",
+      "summary": "Implement a persistent Group Chat domain in the Motoko backend that supports creating groups, listing groups, viewing a group, joining/leaving a group, and posting/reading group messages (separate from the existing per-room chat).",
       "reqIds": [
-        "REQ-2"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "ZegoStream",
+  "projectName": "BhuLive",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

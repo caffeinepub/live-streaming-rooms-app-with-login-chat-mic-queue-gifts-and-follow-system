@@ -116,6 +116,13 @@ export interface Room {
     createdAt: Time;
     description?: string;
 }
+export interface Group {
+    id: bigint;
+    owner: Principal;
+    name: string;
+    createdAt: Time;
+    description?: string;
+}
 export interface ChatMessage {
     content: string;
     sender: Principal;
@@ -142,9 +149,11 @@ export interface backendInterface {
     acceptMicRequest(roomId: bigint, user: Principal): Promise<void>;
     addBalance(amount: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    createGroup(name: string, description: string | null): Promise<bigint>;
     createRoom(title: string, description: string | null): Promise<bigint>;
     follow(followee: Principal): Promise<void>;
-    generateZegoKitToken(roomId: bigint, userId: string): Promise<string>;
+    generateAudienceToken(roomId: bigint, userId: string): Promise<string>;
+    generateHostToken(roomId: bigint, userId: string): Promise<string>;
     getAllRooms(): Promise<Array<Room>>;
     getAllUsers(): Promise<Array<UserProfile>>;
     getAudioClips(roomId: bigint): Promise<Array<AudioClip>>;
@@ -155,21 +164,29 @@ export interface backendInterface {
     getFollowerCount(user: Principal): Promise<FollowerCount>;
     getGiftCatalog(): Promise<Array<GiftItem>>;
     getGiftHistory(user: Principal): Promise<Array<GiftTransaction>>;
+    getGroup(groupId: bigint): Promise<Group | null>;
+    getGroupMembers(groupId: bigint): Promise<Array<Principal>>;
+    getGroupMessages(groupId: bigint): Promise<Array<ChatMessage>>;
     getMessages(roomId: bigint): Promise<Array<ChatMessage>>;
     getMicQueue(roomId: bigint): Promise<Array<MicRequest>>;
     getRoom(roomId: bigint): Promise<Room | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isFollowing(follower: Principal, followee: Principal): Promise<boolean>;
+    isGroupMember(groupId: bigint, user: Principal): Promise<boolean>;
+    joinGroup(groupId: bigint): Promise<void>;
+    leaveGroup(groupId: bigint): Promise<void>;
+    listGroups(): Promise<Array<Group>>;
     recordAudioClip(roomId: bigint, data: Uint8Array): Promise<void>;
     requestMic(roomId: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendGift(recipient: Principal, giftId: bigint): Promise<void>;
+    sendGroupMessage(groupId: bigint, content: string): Promise<void>;
     sendMessage(roomId: bigint, content: string): Promise<void>;
     storeZegoCredentials(secretId: string, appId: string): Promise<void>;
     unfollow(followee: Principal): Promise<void>;
 }
-import type { Room as _Room, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Group as _Group, Room as _Room, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -228,6 +245,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createGroup(arg0: string, arg1: string | null): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createGroup(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createGroup(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
     async createRoom(arg0: string, arg1: string | null): Promise<bigint> {
         if (this.processError) {
             try {
@@ -256,17 +287,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async generateZegoKitToken(arg0: bigint, arg1: string): Promise<string> {
+    async generateAudienceToken(arg0: bigint, arg1: string): Promise<string> {
         if (this.processError) {
             try {
-                const result = await this.actor.generateZegoKitToken(arg0, arg1);
+                const result = await this.actor.generateAudienceToken(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.generateZegoKitToken(arg0, arg1);
+            const result = await this.actor.generateAudienceToken(arg0, arg1);
+            return result;
+        }
+    }
+    async generateHostToken(arg0: bigint, arg1: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.generateHostToken(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.generateHostToken(arg0, arg1);
             return result;
         }
     }
@@ -410,6 +455,48 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getGroup(arg0: bigint): Promise<Group | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGroup(arg0);
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGroup(arg0);
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getGroupMembers(arg0: bigint): Promise<Array<Principal>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGroupMembers(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGroupMembers(arg0);
+            return result;
+        }
+    }
+    async getGroupMessages(arg0: bigint): Promise<Array<ChatMessage>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGroupMessages(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGroupMessages(arg0);
+            return result;
+        }
+    }
     async getMessages(arg0: bigint): Promise<Array<ChatMessage>> {
         if (this.processError) {
             try {
@@ -442,14 +529,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getRoom(arg0);
-                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRoom(arg0);
-            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -494,6 +581,62 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isGroupMember(arg0: bigint, arg1: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isGroupMember(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isGroupMember(arg0, arg1);
+            return result;
+        }
+    }
+    async joinGroup(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.joinGroup(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.joinGroup(arg0);
+            return result;
+        }
+    }
+    async leaveGroup(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.leaveGroup(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.leaveGroup(arg0);
+            return result;
+        }
+    }
+    async listGroups(): Promise<Array<Group>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listGroups();
+                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listGroups();
+            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async recordAudioClip(arg0: bigint, arg1: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
@@ -525,14 +668,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n16(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n20(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n16(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n20(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -547,6 +690,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.sendGift(arg0, arg1);
+            return result;
+        }
+    }
+    async sendGroupMessage(arg0: bigint, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.sendGroupMessage(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.sendGroupMessage(arg0, arg1);
             return result;
         }
     }
@@ -593,6 +750,9 @@ export class Backend implements backendInterface {
         }
     }
 }
+function from_candid_Group_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Group): Group {
+    return from_candid_record_n17(_uploadFile, _downloadFile, value);
+}
 function from_candid_Room_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Room): Room {
     return from_candid_record_n6(_uploadFile, _downloadFile, value);
 }
@@ -608,7 +768,10 @@ function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Room]): Room | null {
+function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Group]): Group | null {
+    return value.length === 0 ? null : from_candid_Group_n16(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Room]): Room | null {
     return value.length === 0 ? null : from_candid_Room_n5(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
@@ -627,6 +790,27 @@ function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uin
         displayName: value.displayName,
         createdAt: value.createdAt,
         avatarUrl: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.avatarUrl))
+    };
+}
+function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    owner: Principal;
+    name: string;
+    createdAt: _Time;
+    description: [] | [string];
+}): {
+    id: bigint;
+    owner: Principal;
+    name: string;
+    createdAt: Time;
+    description?: string;
+} {
+    return {
+        id: value.id,
+        owner: value.owner,
+        name: value.name,
+        createdAt: value.createdAt,
+        description: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.description))
     };
 }
 function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -659,14 +843,17 @@ function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
+function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Group>): Array<Group> {
+    return value.map((x)=>from_candid_Group_n16(_uploadFile, _downloadFile, x));
+}
 function from_candid_vec_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Room>): Array<Room> {
     return value.map((x)=>from_candid_Room_n5(_uploadFile, _downloadFile, x));
 }
 function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_UserProfile>): Array<UserProfile> {
     return value.map((x)=>from_candid_UserProfile_n9(_uploadFile, _downloadFile, x));
 }
-function to_candid_UserProfile_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n17(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n21(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
@@ -674,7 +861,7 @@ function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function to_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     displayName: string;
     createdAt: Time;
     avatarUrl?: string;

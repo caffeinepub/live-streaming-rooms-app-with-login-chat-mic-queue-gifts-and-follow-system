@@ -89,13 +89,7 @@ export default function RoomPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {isAuthenticated && window.ZegoUIKitPrebuilt ? (
-                <ZegoLiveStream roomId={roomId} isHost={isOwner} />
-              ) : (
-                <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
-                  <p className="text-muted-foreground">Please log in to watch the live stream</p>
-                </div>
-              )}
+              <ZegoLiveStream roomId={roomId} isHost={isOwner} />
             </CardContent>
           </Card>
 
